@@ -4,12 +4,16 @@ Copyright © 2024 hacktivist123
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/hacktivist123/kpeek/pkg/kube"
 	"github.com/spf13/cobra"
+
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 var (
@@ -50,8 +54,36 @@ a Deployment or Pod into a single, easy-to-read report.`,
 			os.Exit(1)
 		}
 
-		fmt.Printf("Connecting to cluster...\n")
-		fmt.Printf("Successfully fetched %s: %s\n", resourceData.Kind, resourceName)
+		var pods []corev1.Pod
+		if resourceData.Kind == "Deployment" {
+			deploy := resourceData.Obj.(*appsv1.Deployment)
+			pods, err = kube.GetDeploymentPods(client, namespace, deploy)
+			if err != nil {
+				fmt.Printf("Error fetching deployment pods: %v\n", err)
+				os.Exit(1)
+			} else if resourceData.Kind == "Pod" {
+				// if the resource itself is a Pod, just cast and add it to pods
+				pod := resourceData.Obj.(*corev1.Pod)
+				pods = []corev1.Pod{*pod}
+			}
+		}
+
+		if jsonOut {
+			output := map[string]interface{}{
+				"resourceType": resourceData.Kind,
+				"resourceName": resourceName,
+				"namespace":    namespace,
+				"podsFound":    len(pods),
+			}
+			b, _ := json.MarshalIndent(output, "", "  ")
+			fmt.Println(string(b))
+		} else {
+			fmt.Printf("Resource: %s/%s\n", resourceType, resourceName)
+			fmt.Printf("Pods found: %d\n", len(pods))
+			for _, p := range pods {
+				fmt.Printf("- %s\n", p.Name)
+			}
+		}
 	},
 }
 
