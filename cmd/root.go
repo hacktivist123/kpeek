@@ -22,6 +22,24 @@ var (
 	noLogs    bool
 )
 
+type OutputData struct {
+	ResourceType string    `json:"resourceType"`
+	ResourceName string    `json:"resourceName"`
+	Namespace    string    `json:"namespace"`
+	Pods         []PodInfo `json:"pods"`
+}
+
+type PodInfo struct {
+	PodName      string              `json:"podName"`
+	Containers   []ContainerInfo     `json:"containers"`
+	ContainerLog []kube.ContainerLog `json:"logs,omitempty"`
+}
+
+type ContainerInfo struct {
+	Name  string `json:"name"`
+	Image string `json:"image"`
+}
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "kpeek [resource/type-name]",
@@ -55,33 +73,69 @@ a Deployment or Pod into a single, easy-to-read report.`,
 		}
 
 		var pods []corev1.Pod
-		if resourceData.Kind == "Deployment" {
+		switch resourceData.Kind {
+		case "Deployment":
 			deploy := resourceData.Obj.(*appsv1.Deployment)
 			pods, err = kube.GetDeploymentPods(client, namespace, deploy)
 			if err != nil {
 				fmt.Printf("Error fetching deployment pods: %v\n", err)
 				os.Exit(1)
-			} else if resourceData.Kind == "Pod" {
-				// if the resource itself is a Pod, just cast and add it to pods
-				pod := resourceData.Obj.(*corev1.Pod)
-				pods = []corev1.Pod{*pod}
 			}
+		case "Pod":
+			pod := resourceData.Obj.(*corev1.Pod)
+			pods = []corev1.Pod{*pod}
+		default:
+			fmt.Printf("Unsupported resource kind: %s\n", resourceData.Kind)
+			os.Exit(1)
 		}
 
-		if jsonOut {
-			output := map[string]interface{}{
-				"resourceType": resourceData.Kind,
-				"resourceName": resourceName,
-				"namespace":    namespace,
-				"podsFound":    len(pods),
+		var output OutputData
+		output.ResourceType = resourceData.Kind
+		output.ResourceName = resourceName
+		output.Namespace = namespace
+
+		for _, p := range pods {
+			podInfo := PodInfo{
+				PodName: p.Name,
 			}
-			b, _ := json.MarshalIndent(output, "", "  ")
-			fmt.Println(string(b))
+
+			// Basic Container Info
+			for _, c := range p.Spec.Containers {
+				podInfo.Containers = append(podInfo.Containers, ContainerInfo{
+					Name:  c.Name,
+					Image: c.Image,
+				})
+			}
+
+			// Fetch Logs if not --no-logs
+			if !noLogs {
+				logs, err := kube.FetchPodLogs(client, namespace, p)
+				if err != nil {
+					fmt.Printf("Error fetching logs for pod %s: %v\n", p.Name, err)
+					os.Exit(1)
+				}
+				podInfo.ContainerLog = logs
+			}
+
+			output.Pods = append(output.Pods, podInfo)
+		}
+
+		// Print output
+		if jsonOut {
+			data, _ := json.MarshalIndent(output, "", "  ")
+			fmt.Println(string(data))
 		} else {
-			fmt.Printf("Resource: %s/%s\n", resourceType, resourceName)
-			fmt.Printf("Pods found: %d\n", len(pods))
-			for _, p := range pods {
-				fmt.Printf("- %s\n", p.Name)
+			fmt.Printf("Resource: %s/%s (Namespace: %s)\n", resourceType, resourceName, namespace)
+			for _, p := range output.Pods {
+				fmt.Printf("Pod: %s\n", p.PodName)
+				for _, c := range p.Containers {
+					fmt.Printf("  Container: %s (Image: %s)\n", c.Name, c.Image)
+				}
+				if !noLogs {
+					for _, log := range p.ContainerLog {
+						fmt.Printf("  Logs from %s/%s:\n%s\n", log.PodName, log.ContainerName, log.Logs)
+					}
+				}
 			}
 		}
 	},
