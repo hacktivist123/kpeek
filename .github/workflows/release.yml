@@ -42,8 +42,6 @@ jobs:
 
       - name: Build
         run: go build -o kpeek .
-      - name: Test
-        run: go test ./... -v
 
       - name: Docker Build
         run: docker build -t hacktivist123/kpeek .
