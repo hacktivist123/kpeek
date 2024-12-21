@@ -1,5 +1,7 @@
 # kpeek
 
+![CI](https://github.com/hacktivist123/kpeek/actions/workflows/ci.yml/badge.svg)
+
 ![Kpeek in Action](./img/demo.png)
 
 **kpeek** is a command-line tool that aggregates describe output, container logs, and (optionally) events for a given Kubernetes resource. It simplifies debugging and provides a clean, colorized, human-readable report.
