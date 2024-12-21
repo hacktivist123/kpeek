@@ -1,0 +1,62 @@
+name: Auto-Tag, Release & Docker Push
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Bump Version and Create Tag
+        id: bump_version
+        uses: anothrnick/github-tag-action@1.71.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          DEFAULT_BRANCH: "main"   
+          RELEASE_BRANCHES: "main"
+          WITH_V: true        
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ steps.bump_version.outputs.new_tag }}
+          release_name: "Release ${{ steps.bump_version.outputs.new_tag }}"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+
+      - name: Build
+        run: go build -o kpeek .
+      - name: Test
+        run: go test ./... -v
+
+      - name: Docker Build
+        run: docker build -t hacktivist123/kpeek .
+
+      - name: Tag & Push Docker Image
+        run: |
+          echo "New Tag: ${{ steps.bump_version.outputs.new_tag }}"
+          docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" -p "${{ secrets.DOCKERHUB_PASSWORD }}"
+          
+          # Tag the image with the new version, e.g. hacktivist123/kpeek:v1.0.0
+          docker tag hacktivist123/kpeek hacktivist123/kpeek:${{ steps.bump_version.outputs.new_tag }}
+          docker tag hacktivist123/kpeek hacktivist123/kpeek:latest
+
+          # Push both tags
+          docker push hacktivist123/kpeek:${{ steps.bump_version.outputs.new_tag }}
+          docker push hacktivist123/kpeek:latest

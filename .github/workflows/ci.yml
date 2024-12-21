@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-test-docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Check code
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      # 2. Set up Go environment 
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      # 3. Build the code
+      - name: Build
+        run: go build -o kpeek .
+
+      # 4. Run tests
+      - name: Test
+        run: go test ./... -v
+
+      # 5. Build Docker image
+      - name: Docker Build
+        run: docker build -t hacktivist123/kpeek .
+
+      # 6. Tag and push Docker image (only do this on push to main)
+      - name: Docker Tag & Push
+        if: github.ref == 'refs/heads/main'
+        run: |
+          docker tag hacktivist123/kpeek hacktivist123/kpeek:latest
+          docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" -p "${{ secrets.DOCKERHUB_PASSWORD }}"
+          docker push hacktivist123/kpeek:latest
