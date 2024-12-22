@@ -22,6 +22,9 @@
 go install github.com/hacktivist123/kpeek@latest
 ```
 
+> [!NOTE]
+> You might need to add `$HOME/go/bin` to Your `$PATH` after installation
+
 - Build From Source
 
 ```bash
