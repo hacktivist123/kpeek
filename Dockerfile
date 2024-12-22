@@ -6,7 +6,7 @@ RUN go mod download
 COPY . .
 RUN go build -o kpeek .
 
-FROM alpine:3.18
+FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /app/kpeek /usr/local/bin/kpeek
 ENTRYPOINT ["kpeek"]

@@ -3,8 +3,6 @@ name: Auto-Tag, Release & Docker Push
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   release:
@@ -40,9 +38,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
-      - name: Build
-        run: go build -o kpeek .
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -56,5 +51,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          platforms: linux/amd64,linux/arm64,linux/ppc64le,linux/arm/v7,linux/arm/v6,linux/386
+          platforms: linux/amd64,linux/arm64
           tags: hacktivist123/kpeek:latest
+          cache-from: type=registry,ref=hacktivist123/kpeek:buildcache
+          cache-to: type=registry,ref=hacktivist123/kpeek:buildcache,mode=max
