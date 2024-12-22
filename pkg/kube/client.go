@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 func GetClient() (kubernetes.Interface, error) {
@@ -28,7 +28,7 @@ func GetClient() (kubernetes.Interface, error) {
 
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create clientset: %w, err")
+		return nil, fmt.Errorf("unable to create clientset: %w", err)
 	}
 	return clientset, nil
 }
@@ -42,4 +42,4 @@ func buildConfig(kubeconfigPath string) (*rest.Config, error) {
 	}
 	// if no kubeconfig file, try in-cluster config
 	return rest.InClusterConfig()
-} 
+}

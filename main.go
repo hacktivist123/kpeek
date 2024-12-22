@@ -1,6 +1,5 @@
 /*
 Copyright © 2024 hacktivist123
-
 */
 package main
 
