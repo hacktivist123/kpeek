@@ -38,6 +38,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -55,3 +58,5 @@ jobs:
           tags: hacktivist123/kpeek:latest
           cache-from: type=registry,ref=hacktivist123/kpeek:buildcache
           cache-to: type=registry,ref=hacktivist123/kpeek:buildcache,mode=max
+          secrets: |
+            GIT_AUTH_TOKEN=${{ secrets.ACCESS_TOKEN }}
