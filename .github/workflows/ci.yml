@@ -38,5 +38,5 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: |
           docker tag hacktivist123/kpeek hacktivist123/kpeek:latest
-          docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" -p "${{ secrets.DOCKERHUB_PASSWORD }}"
+          docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" -p "${{ secrets.DOCKERHUB_PASSWORD }}" docker.io
           docker push hacktivist123/kpeek:latest
