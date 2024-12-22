@@ -55,8 +55,8 @@ jobs:
         with:
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: hacktivist123/kpeek:latest
-          cache-from: type=registry,ref=hacktivist123/kpeek:buildcache
-          cache-to: type=registry,ref=hacktivist123/kpeek:buildcache,mode=max
+          tags: coderblvck/kpeek:latest
+          cache-from: type=registry,ref=coderblvck/kpeek:buildcache
+          cache-to: type=registry,ref=coderblvck/kpeek:buildcache,mode=max
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.ACCESS_TOKEN }}
