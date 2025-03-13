@@ -18,9 +18,11 @@ import (
 
 var (
 	namespace     string
+	logRegex      string
 	jsonOut       bool
 	noLogs        bool
 	includeEvents bool
+	logTail       int
 )
 
 // OutputData is your final struct holding everything fetched.
@@ -121,7 +123,7 @@ resource like a Deployment or Pod into a single, colorized report.`,
 			}
 
 			if !noLogs {
-				logs, err := kube.FetchPodLogs(client, namespace, p)
+				logs, err := kube.FetchPodLogs(client, namespace, p, logTail)
 				if err != nil {
 					fmt.Println(color.RedString("Error fetching logs for pod %s: %v", p.Name, err))
 					os.Exit(1)
@@ -130,6 +132,12 @@ resource like a Deployment or Pod into a single, colorized report.`,
 			}
 
 			output.Pods = append(output.Pods, podInfo)
+
+			for i, podInfo := range output.Pods {
+				for j, containerLog := range podInfo.ContainerLog {
+					output.Pods[i].ContainerLog[j].Logs = kube.FilterLogs(containerLog.Logs, logTail, logRegex)
+				}
+			}
 		}
 
 		// Collect events if requested
@@ -178,6 +186,8 @@ func init() {
 	rootCmd.Flags().BoolVar(&jsonOut, "json", false, "Output in JSON format")
 	rootCmd.Flags().BoolVar(&noLogs, "no-logs", false, "Skip retrieving container logs")
 	rootCmd.Flags().BoolVar(&includeEvents, "include-events", false, "Include events in the output")
+	rootCmd.Flags().IntVar(&logTail, "log-tail", 0, "display only the last N lines of logs (0 for all)")
+	rootCmd.Flags().StringVar(&logRegex, "log-regex", "", "regular expression to filter log lines")
 }
 
 // Execute runs the root command

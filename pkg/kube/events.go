@@ -42,3 +42,5 @@ func ListAllEventsInNamespace(client kubernetes.Interface, namespace string) ([]
 	}
 	return events.Items, nil
 }
+
+

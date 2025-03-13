@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"regexp"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -19,15 +20,22 @@ type ContainerLog struct {
 }
 
 // FetchPodLogs retrieves logs for all containers in a given pod.
-func FetchPodLogs(client kubernetes.Interface, namespace string, pod corev1.Pod) ([]ContainerLog, error) {
+func FetchPodLogs(client kubernetes.Interface, namespace string, pod corev1.Pod, tailLines int) ([]ContainerLog, error) {
 	ctx := context.Background()
 	var results []ContainerLog
 
 	for _, container := range pod.Spec.Containers {
-		req := client.CoreV1().Pods(namespace).GetLogs(pod.Name, &corev1.PodLogOptions{Container: container.Name})
+		podLogOptions := &corev1.PodLogOptions{
+			Container: container.Name,
+		}
+		if tailLines > 0 {
+			t := int64(tailLines)
+			podLogOptions.TailLines = &t
+		}
+
+		req := client.CoreV1().Pods(namespace).GetLogs(pod.Name, podLogOptions)
 		stream, err := req.Stream(ctx)
 		if err != nil {
-			// If logs can't be fetched for this container, continue with others but record the error.
 			results = append(results, ContainerLog{
 				PodName:       pod.Name,
 				ContainerName: container.Name,
@@ -35,9 +43,7 @@ func FetchPodLogs(client kubernetes.Interface, namespace string, pod corev1.Pod)
 			})
 			continue
 		}
-		defer stream.Close()
 
-		// Read logs into a string
 		logData, err := readStream(stream)
 		if err != nil {
 			results = append(results, ContainerLog{
@@ -73,4 +79,34 @@ func readStream(stream io.ReadCloser) (string, error) {
 	}
 
 	return sb.String(), nil
+}
+
+// filter logs provides advanced filtering for logs based on regex, log tail
+func FilterLogs(logString string, logTail int, logRegex string) string {
+	lines := strings.Split(logString, "\n")
+	if len(lines) > 0 && lines[len(lines)-1] == "" {
+		lines = lines[:len(lines)-1]
+	}
+
+	if logTail > 0 {
+		if logTail > len(lines) {
+			logTail = len(lines)
+		}
+		lines = lines[len(lines)-logTail:]
+	}
+
+	if len(logRegex) > 0 {
+		filteredLines := []string{}
+		for _, line := range lines {
+			regexMatched, err := regexp.MatchString(logRegex, line)
+			if err != nil {
+				fmt.Println(err)
+			}
+			if regexMatched {
+				filteredLines = append(filteredLines, line)
+			}
+		}
+		lines = filteredLines
+	}
+	return strings.Join(lines, "\n")
 }

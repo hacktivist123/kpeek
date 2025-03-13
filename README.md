@@ -56,6 +56,8 @@ kpeek [resource/type-name] [flags]
 | `--json` | Output in JSON format. |
 | `--no-logs` | Skip retrieving container logs. |
 | `--include-events` | Include events in the output.|
+| `--log-tail int` | Display only the last N lines of logs (`0` for all) |
+| `--log-regex` | Regular expression to filter log lines |
 
 ## Contributing
 

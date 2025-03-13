@@ -1,6 +1,6 @@
 module github.com/hacktivist123/kpeek
 
-go 1.23.2
+go 1.24.0
 
 require (
 	github.com/fatih/color v1.18.0
