@@ -25,18 +25,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           DEFAULT_BRANCH: "main"   
           RELEASE_BRANCHES: "main"
-          WITH_V: true        
-
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
-        with:
-          tag_name: ${{ steps.bump_version.outputs.new_tag }}
-          release_name: "Release ${{ steps.bump_version.outputs.new_tag }}"
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          WITH_V: true       
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -53,7 +42,7 @@ jobs:
       - name: Build kpeek with version
         run: |
           echo "Building kpeek with version: ${{ steps.bump_version.outputs.new_tag }}"
-          go build -ldflags "-X github.com/hacktivist123/kpeek/cmd.version=$${{ steps.bump_version.outputs.new_tag }}" -o kpeek .
+          go build -ldflags "-X github.com/hacktivist123/kpeek/cmd.version=${{ steps.bump_version.outputs.new_tag }}" -o kpeek .
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -67,3 +56,15 @@ jobs:
           cache-to: type=registry,ref=coderblvck/kpeek:buildcache,mode=max
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.ACCESS_TOKEN }}
+
+      - name: Create GitHub Release
+        if: ${{ success() }}
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ steps.bump_version.outputs.new_tag }}
+          release_name: "Release ${{ steps.bump_version.outputs.new_tag }}"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
