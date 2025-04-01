@@ -22,7 +22,8 @@
 go install github.com/hacktivist123/kpeek@latest
 ```
 
-> [!INFO]
+> [!NOTE]
+
 > - The above command does not embed an official release version in the binary. If you run `kpeek update` and your local version is unrecognized, kpeek may always see itself as outdated. You can still successfully update to the latest release, but your local binary won’t display an exact version string.
 > - You might need to add `$HOME/go/bin` to Your `$PATH` after installation
 
@@ -39,7 +40,7 @@ go build -ldflags "-X github.com/hacktivist123/kpeek/cmd.version=v0.7.0" -o kpee
 ./kpeek --help
 ```
 
->[!INFO]
+>[!NOTE]
 > Replace `v0.7.0` with the appropriate release version. This approach embeds the release version in the binary, which ensures that commands like kpeek update correctly compare the local version with the latest release.
 
 - Run With `go run`
