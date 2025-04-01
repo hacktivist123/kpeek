@@ -73,10 +73,19 @@ jobs:
           tags: |
             coderblvck/kpeek:latest
             coderblvck/kpeek:${{ steps.bump_version.outputs.new_tag }}
+          build-args: |
+            KPEEK_VERSION=${{ steps.bump_version.outputs.new_tag }}
           cache-from: type=registry,ref=coderblvck/kpeek:buildcache
           cache-to: type=registry,ref=coderblvck/kpeek:buildcache,mode=max
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.ACCESS_TOKEN }}
+
+      # Upload the built binary as an artifact
+      - name: Upload kpeek binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: kpeek-binary
+          path: kpeek
 
       # Create GitHub Release.
       - name: Create GitHub Release
