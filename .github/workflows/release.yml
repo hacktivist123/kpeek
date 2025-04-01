@@ -50,12 +50,19 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
+      - name: Build kpeek with version
+        run: |
+          echo "Building kpeek with version: ${{ steps.bump_version.outputs.new_tag }}"
+          go build -ldflags "-X github.com/hacktivist123/kpeek/cmd.version=$${{ steps.bump_version.outputs.new_tag }}" -o kpeek .
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: coderblvck/kpeek:latest
+          tags: |
+            coderblvck/kpeek:latest
+            coderblvck/kpeek:${{ steps.bump_version.outputs.new_tag }}
           cache-from: type=registry,ref=coderblvck/kpeek:buildcache
           cache-to: type=registry,ref=coderblvck/kpeek:buildcache,mode=max
           secrets: |

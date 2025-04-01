@@ -22,7 +22,7 @@ jobs:
         go-version: '1.24'
 
     - name: Build
-      run: go build -o kpeek .
+      run: go build -ldflags "-X github.com/hacktivist123/kpeek/cmd.version=${{ env.VERSION }}" -o kpeek .
 
     - name: Upload Archives
       uses: actions/upload-artifact@v4
