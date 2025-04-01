@@ -3,8 +3,14 @@ name: Build, Test, and Release
 on:
   push:
     branches: [ "main" ]
+    paths-ignore:
+      - 'README.md'
+      - '/img/**'
   pull_request:
     branches: [ "main" ]
+    paths-ignore:
+      - 'README.md'
+      - '/img/**'
 
 jobs:
   release:

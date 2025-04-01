@@ -1,6 +1,6 @@
 # kpeek
 
-![CI](https://github.com/hacktivist123/kpeek/actions/workflows/release.yml/badge.svg) ![CI](https://github.com/hacktivist123/kpeek/actions/workflows/go.yaml/badge.svg) ![CI](https://github.com/hacktivist123/kpeek/actions/workflows/.golangci-lint.yaml/badge.svg)
+![CI](https://github.com/hacktivist123/kpeek/actions/workflows/build-and-release.yml/badge.svg) ![CI](https://github.com/hacktivist123/kpeek/actions/workflows/.golangci-lint.yaml/badge.svg)
 
 ![Kpeek in Action](./img/demo.png)
 
